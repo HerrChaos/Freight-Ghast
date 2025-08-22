@@ -5,6 +5,7 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.*;
@@ -28,22 +29,39 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 
 @Mixin(HappyGhast.class)
-public abstract class HappyGhastOpenChestsMixin implements HappyGhastInventoryDataSaver {
-    private static final EntityDataAccessor<Integer> CHEST_AMOUNT = SynchedEntityData.defineId(HappyGhast.class, EntityDataSerializers.INT);
+public abstract class HappyGhastOpenChestsMixin extends Animal implements HappyGhastInventoryDataSaver {
+    @Unique
+    private static final EntityDataAccessor<Integer> CHEST_AMOUNT = SynchedEntityData.defineId(HappyGhastOpenChestsMixin.class, EntityDataSerializers.INT);
 
     @Unique
     public List<ItemStack> freight_ghast$chestsItems = NonNullList.withSize(54, ItemStack.EMPTY);
+
+    protected HappyGhastOpenChestsMixin(EntityType<? extends Animal> entityType, Level level) {
+        super(entityType, level);
+    }
 
     @Inject(method = "defineSynchedData", at = @At(value = "TAIL"))
     protected void defineSynchedData(SynchedEntityData.Builder builder, CallbackInfo ci) {
         builder.define(CHEST_AMOUNT, 0);
     }
 
+    @Override
+    protected void dropEquipment(ServerLevel serverLevel) {
+        super.dropEquipment(serverLevel);
+
+        this.freight_ghast$chestsItems.forEach((itemStack) -> this.spawnAtLocation(serverLevel, itemStack));
+        this.freight_ghast$chestsItems.clear();
+
+        if (this.freight_ghast$getChestAmount() > 0) {
+            this.spawnAtLocation(serverLevel, new ItemStack(Items.CHEST, this.freight_ghast$getChestAmount()));
+            this.freight_ghast$setChestAmount(0);
+        }
+    }
+
     @Inject(method = "mobInteract", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;getItemInHand(Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/item/ItemStack;"), cancellable = true)
     public void openChests(Player player, InteractionHand interactionHand, CallbackInfoReturnable<InteractionResult> cir) {
+        HappyGhast happyGhast = (HappyGhast) (Object) this;
         if (player.getItemInHand(interactionHand).is(Items.CHEST)) {
-            HappyGhast happyGhast = (HappyGhast) (Object) this;
-
             if (this.freight_ghast$getChestAmount() >= 6) {
                 cir.setReturnValue(InteractionResult.FAIL);
                 cir.cancel();
@@ -53,20 +71,32 @@ public abstract class HappyGhastOpenChestsMixin implements HappyGhastInventoryDa
             this.freight_ghast$setChestAmount(this.freight_ghast$getChestAmount() + 1);
             player.getItemInHand(interactionHand).shrink(1);
 
-            player.level().playSound(null, happyGhast.getX(), happyGhast.getY(), happyGhast.getZ(), SoundEvents.LLAMA_CHEST, SoundSource.PLAYERS);
+            player.level().playSound(null, happyGhast.getX(), happyGhast.getY(), happyGhast.getZ(), SoundEvents.HARNESS_EQUIP.value(), SoundSource.PLAYERS);
+            cir.setReturnValue(InteractionResult.SUCCESS);
+            cir.cancel();
+            return;
+        }
+
+        if (player.getItemInHand(interactionHand).is(Items.SHEARS) && player.level() instanceof ServerLevel serverLevel) {
+            serverLevel.playSound(null, happyGhast.getX(), happyGhast.getY(), happyGhast.getZ(), SoundEvents.SHEARS_SNIP, SoundSource.PLAYERS);
+
+            this.spawnAtLocation(serverLevel, new ItemStack(Items.CHEST, 1));
+            if (this.freight_ghast$getChestAmount() == 6) {
+                this.freight_ghast$chestsItems.forEach((itemStack) -> this.spawnAtLocation(serverLevel, itemStack));
+                this.freight_ghast$chestsItems.clear();
+            }
+
+            this.freight_ghast$setChestAmount(this.freight_ghast$getChestAmount() - 1);
+
             cir.setReturnValue(InteractionResult.SUCCESS);
             cir.cancel();
             return;
         }
 
         if (player.isSecondaryUseActive() && this.freight_ghast$getChestAmount() == 6) {
-            HappyGhast happyGhast = (HappyGhast) (Object) this;
-
             SimpleContainer container = new SimpleContainer(freight_ghast$chestsItems.toArray(new ItemStack[0]));
 
-            container.addListener((newContainer) -> {
-                this.freight_ghast$chestsItems = ((SimpleContainer) newContainer).getItems();
-            });
+            container.addListener((newContainer) -> this.freight_ghast$chestsItems = ((SimpleContainer) newContainer).getItems());
 
             player.openMenu(new SimpleMenuProvider((i, inventory, player1) ->
                     new ChestMenu(
