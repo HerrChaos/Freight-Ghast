@@ -3,7 +3,6 @@ package com.github.herrchaos.freight_ghast.mixin.client;
 import com.github.herrchaos.freight_ghast.datasaver.HappyGhastInventoryDataSaver;
 import com.github.herrchaos.freight_ghast.datasaver.HappyGhastRenderStateDataSaver;
 import com.github.herrchaos.freight_ghast.entity.client.renderlayer.ChestRenderLayer;
-import com.github.herrchaos.freight_ghast.mixin.HappyGhastOpenChestsMixin;
 import net.minecraft.client.model.HappyGhastModel;
 import net.minecraft.client.renderer.entity.AgeableMobRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;

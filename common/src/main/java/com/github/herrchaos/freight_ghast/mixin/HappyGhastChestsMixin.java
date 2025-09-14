@@ -29,14 +29,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 
 @Mixin(HappyGhast.class)
-public abstract class HappyGhastOpenChestsMixin extends Animal implements HappyGhastInventoryDataSaver {
+public abstract class HappyGhastChestsMixin extends Animal implements HappyGhastInventoryDataSaver {
     @Unique
-    private static final EntityDataAccessor<Integer> CHEST_AMOUNT = SynchedEntityData.defineId(HappyGhastOpenChestsMixin.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> CHEST_AMOUNT = SynchedEntityData.defineId(HappyGhastChestsMixin.class, EntityDataSerializers.INT);
 
     @Unique
     public List<ItemStack> freight_ghast$chestsItems = NonNullList.withSize(54, ItemStack.EMPTY);
 
-    protected HappyGhastOpenChestsMixin(EntityType<? extends Animal> entityType, Level level) {
+    protected HappyGhastChestsMixin(EntityType<? extends Animal> entityType, Level level) {
         super(entityType, level);
     }
 

@@ -4,6 +4,7 @@ import com.github.herrchaos.freight_ghast.entity.client.ModModelLayers;
 import com.github.herrchaos.freight_ghast.entity.client.model.ChestHarnessModel;
 import dev.architectury.platform.Platform;
 import dev.architectury.registry.client.level.entity.EntityModelLayerRegistry;
+import dev.architectury.utils.ArchitecturyConstants;
 import dev.architectury.utils.Env;
 import net.minecraft.resources.ResourceLocation;
 
