@@ -5,10 +5,11 @@ import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 
 import java.util.List;
 
-public class ChestHarnessModel extends Model {
+public class ChestHarnessModel<T extends LivingEntityRenderState> extends Model<T> {
     private final ModelPart holder;
     private final ModelPart holster5;
     private final ModelPart holster3;
